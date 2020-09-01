@@ -120,8 +120,9 @@ public class Build {
     public static UnityWebRequest CreatePostJsonRequest(string url, object body)
     {
         var json = JsonUtility.ToJson(body);
-        var request = UnityWebRequest.Put(url, json);
-        request.method = UnityWebRequest.kHttpVerbPOST;
+        var bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+        var request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         SetJsonHeaders(request);
         return request;
     }
@@ -152,7 +153,7 @@ public class Build {
 
         // HACK - typically we would yield the SendWebRequest response
         //  and this method would be executed as a coroutine.
-        while (request.downloadProgress < 1.0f)
+        while (!request.isDone)
         {
             System.Threading.Thread.Sleep(100);
         }
