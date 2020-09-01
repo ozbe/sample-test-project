@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Simulation.Games;
 using System;
 using System.IO.Compression;
@@ -16,10 +14,13 @@ public class Build {
         var password = Environment.GetEnvironmentVariable("UNITY_PASSWORD");
 
         // zip
+        Debug.Log("Zipping...");
         var zipPath = Path.Combine(Path.GetDirectoryName(exportPath), "upload.zip");
         ZipFile.CreateFromDirectory(exportPath, zipPath);
+        Debug.Log("Done.");
 
         // get token
+        Debug.Log("Getting token...");
         string accessToken;
         var loginRequest = new LoginRequest(username, password);
         var loginJson = JsonUtility.ToJson(loginRequest);
@@ -32,8 +33,10 @@ public class Build {
             var loginResponse = JsonUtility.FromJson<LoginResponse>(response);
             accessToken = loginResponse.access_token;
         }
+        Debug.Log("Done.");
 
         // get upload path
+        Debug.Log("Creating Game Simulation build...");
         BuildResponse buildResponse;
         var buildsUrl = string.Format('https://api.prd.gamesimulation.unity3d.com/v1/builds?projectId={0}', unityProjectId);
         var buildRequest = new BuildRequest("Foo", "Bar");
@@ -47,10 +50,13 @@ public class Build {
             var response = System.Text.Encoding.UTF8.GetString(request.downloadHandler.data);
             buildResponse = JsonUtility.FromJson<BuildResponse>(response);
         }
+        Debug.Log("Done.");
+
 
         Debug.Log(string.Format("Build upload: {0}", buildResponse.id));
 
         // upload build
+        Debug.Log("Uploading Game Simulation build...");
         using (var request = new UnityWebRequest(buildResponse.upload_uri, UnityWebRequest.kHttpVerbPOST))
         {
             request.uploadHandler = new UploadHandlerFile(zipPath);
@@ -63,6 +69,7 @@ public class Build {
             }
 
         }
+        Debug.Log("Done.");
     }
 
     [Serializable]
