@@ -123,6 +123,7 @@ public class Build {
         var bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
         var request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
         SetJsonHeaders(request);
         return request;
     }
