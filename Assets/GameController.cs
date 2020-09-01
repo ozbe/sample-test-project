@@ -5,10 +5,11 @@ using System.IO.Compression;
 using UnityEngine.Networking;
 using System.IO;
 
-#if true || UNITY_CLOUD_BUILD
+#if UNITY_CLOUD_BUILD
 public class Build {
     public static void PostExport(string exportPath)
     {
+        Debug.Log(string.Format("Export path: {0}", exportPath));
         var unityProjectId = Environment.GetEnvironmentVariable("UNITY_PROJECT_ID");
         var username = Environment.GetEnvironmentVariable("UNITY_USERNAME");
         var password = Environment.GetEnvironmentVariable("UNITY_PASSWORD");
@@ -18,6 +19,8 @@ public class Build {
         var zipPath = Path.Combine(Path.GetDirectoryName(exportPath), "upload.zip");
         ZipFile.CreateFromDirectory(exportPath, zipPath);
         Debug.Log("Done.");
+
+        Debug.Log(string.Format("Zip path: {0}", zipPath));
 
         // get token
         Debug.Log("Getting token...");
