@@ -83,7 +83,7 @@ public class Build {
 
     private static void UploadGameSimulationBuild(string zipPath, BuildResponse buildResponse)
     {
-        using (var request = new UnityWebRequest(buildResponse.upload_uri, UnityWebRequest.kHttpVerbPOST))
+        using (var request = new UnityWebRequest(buildResponse.upload_uri, UnityWebRequest.kHttpVerbPUT))
         {
             request.uploadHandler = new UploadHandlerFile(zipPath);
 
