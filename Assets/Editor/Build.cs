@@ -32,7 +32,14 @@ public class Build {
         {
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("Accept", "application/json");
+
             Execute(request);
+            if (request.isNetworkError || request.isHttpError)
+            {
+                Debug.LogError(request.error);
+                return;
+            }
+
             var response = request.downloadHandler.text;
             var loginResponse = JsonUtility.FromJson<LoginResponse>(response);
             accessToken = loginResponse.access_token;
@@ -43,14 +50,21 @@ public class Build {
         Debug.Log("Creating Game Simulation build...");
         BuildResponse buildResponse;
         var buildsUrl = string.Format("https://api.prd.gamesimulation.unity3d.com/v1/builds?projectId={0}", unityProjectId);
-        var buildRequest = new BuildRequest("Foo", "Bar");
+        var buildRequest = new BuildRequest("SampleTestProject", "");
         var buildJson = JsonUtility.ToJson(buildRequest);
         using (var request = UnityWebRequest.Post(buildsUrl, buildJson))
         {
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("Accept", "application/json");
             request.SetRequestHeader("Authorization", string.Format("Bearer {0}", accessToken));
+
             Execute(request);
+            if (request.isNetworkError || request.isHttpError)
+            {
+                Debug.LogError(request.error);
+                return;
+            }
+
             var response = request.downloadHandler.text;
             buildResponse = JsonUtility.FromJson<BuildResponse>(response);
         }
@@ -64,6 +78,7 @@ public class Build {
         using (var request = new UnityWebRequest(buildResponse.upload_uri, UnityWebRequest.kHttpVerbPOST))
         {
             request.uploadHandler = new UploadHandlerFile(zipPath);
+
             Execute(request);
             if (request.isNetworkError || request.isHttpError)
             {
@@ -76,8 +91,9 @@ public class Build {
 
         Debug.Log("Creating Game Simulation...");
         var simulationsUrl = string.Format("https://api.prd.gamesimulation.unity3d.com/v1/jobs?projectId={0}", unityProjectId);
+        // TODO - load request from json asset
         var simulationRequest = new SimulationRequest();
-        simulationRequest.jobName = "All work and no play";
+        simulationRequest.jobName = "Sample Test Project Simulation";
         simulationRequest.buildId = buildResponse.id;
         simulationRequest.decisionEngineMetadata = new DecisionEngineMetadata();
         simulationRequest.decisionEngineMetadata.engineType = "gridsearch";
@@ -87,14 +103,21 @@ public class Build {
         setting.values = new string[] { "1", "2", "3", "4" };
         simulationRequest.decisionEngineMetadata.settings = new Setting[] { setting };
         simulationRequest.maxRuntimeSeconds = "300";
-        simulationRequest.runsPerParamCombo = 1;
+        simulationRequest.runsPerParamCombo = 10;
         var simulationJson = JsonUtility.ToJson(simulationRequest);
         using (var request = UnityWebRequest.Post(simulationsUrl, simulationJson))
         {
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("Accept", "application/json");
             request.SetRequestHeader("Authorization", string.Format("Bearer {0}", accessToken));
+
             Execute(request);
+            if (request.isNetworkError || request.isHttpError)
+            {
+                Debug.LogError(request.error);
+                return;
+            }
+
             var response = request.downloadHandler.text;
             var simulationResponse = JsonUtility.FromJson<SimulationResponse>(response);
             Debug.Log(string.Format("Simulation id: {0}", simulationResponse.id));
