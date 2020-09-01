@@ -5,7 +5,7 @@ using System.IO.Compression;
 using UnityEngine.Networking;
 using System.IO;
 
-#if UNITY_CLOUD_BUILD
+#if true || UNITY_CLOUD_BUILD
 public class Build {
     public static void PostExport(string exportPath)
     {
