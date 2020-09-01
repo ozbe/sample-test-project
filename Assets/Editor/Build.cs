@@ -4,7 +4,7 @@ using System.IO.Compression;
 using UnityEngine.Networking;
 using System.IO;
 
-#if true || UNITY_CLOUD_BUILD
+#if UNITY_CLOUD_BUILD
 public class Build {
     const string ZIP_NAME = "upload.zip";
 
