@@ -5,7 +5,7 @@ using System.IO.Compression;
 using UnityEngine.Networking;
 using System.IO;
 
-#if UNITY_CLOUD_BUILD
+#if true || UNITY_CLOUD_BUILD
 public class Build {
     public static void PostExport(string exportPath)
     {
@@ -32,8 +32,8 @@ public class Build {
         {
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("Accept", "application/json");
-            request.Send();
-            var response = System.Text.Encoding.UTF8.GetString(request.downloadHandler.data);
+            Execute(request);
+            var response = request.downloadHandler.text;
             var loginResponse = JsonUtility.FromJson<LoginResponse>(response);
             accessToken = loginResponse.access_token;
         }
@@ -50,8 +50,8 @@ public class Build {
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("Accept", "application/json");
             request.SetRequestHeader("Authorization", string.Format("Bearer {0}", accessToken));
-            request.Send();
-            var response = System.Text.Encoding.UTF8.GetString(request.downloadHandler.data);
+            Execute(request);
+            var response = request.downloadHandler.text;
             buildResponse = JsonUtility.FromJson<BuildResponse>(response);
         }
         Debug.Log("Done.");
@@ -64,7 +64,7 @@ public class Build {
         using (var request = new UnityWebRequest(buildResponse.upload_uri, UnityWebRequest.kHttpVerbPOST))
         {
             request.uploadHandler = new UploadHandlerFile(zipPath);
-            request.Send();
+            Execute(request);
             if (request.isNetworkError || request.isHttpError)
             {
                 Debug.LogError(request.error);
@@ -94,12 +94,21 @@ public class Build {
             request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("Accept", "application/json");
             request.SetRequestHeader("Authorization", string.Format("Bearer {0}", accessToken));
-            request.Send();
-            var response = System.Text.Encoding.UTF8.GetString(request.downloadHandler.data);
+            Execute(request);
+            var response = request.downloadHandler.text;
             var simulationResponse = JsonUtility.FromJson<SimulationResponse>(response);
             Debug.Log(string.Format("Simulation id: {0}", simulationResponse.id));
         }
         Debug.Log("Done.");
+    }
+
+    public static void Execute(UnityWebRequest request) 
+    {
+        request.SendWebRequest();
+        while (request.downloadProgress < 1.0f)
+        {
+            System.Threading.Thread.Sleep(100);
+        }
     }
 
     [Serializable]
