@@ -16,11 +16,11 @@ public class Build {
 
         // zip
         Debug.Log("Zipping...");
-        var zipPath = Path.Combine(Path.GetDirectoryName(exportPath), "upload.zip");
-        ZipFile.CreateFromDirectory(exportPath, zipPath);
-        Debug.Log("Done.");
-
+        var exportDirectory = Path.GetDirectoryName(exportPath);
+        var zipPath = Path.Combine(exportDirectory, "upload.zip");
         Debug.Log(string.Format("Zip path: {0}", zipPath));
+        ZipFile.CreateFromDirectory(exportDirectory, zipPath);
+        Debug.Log("Done.");
 
         // get token
         Debug.Log("Getting token...");
