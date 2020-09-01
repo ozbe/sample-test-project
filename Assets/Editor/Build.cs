@@ -6,8 +6,11 @@ using System.IO;
 
 #if true || UNITY_CLOUD_BUILD
 public class Build {
+    const string ZIP_NAME = "upload.zip";
+
     const string GAME_SIMULATION_API_HOST = "https://api.prd.gamesimulation.unity3d.com";
     const string UNITY_API_HOST = "https://api.unity.com";
+    const string UNITY_API_LOGIN_REL_PATH = "/v1/core/api/login";
 
     public static void PostExport(string exportPath)
     {
@@ -47,24 +50,18 @@ public class Build {
 
     private static string ZipBuild(string exportPath)
     {
-        var zipPath = Path.Combine(Path.GetTempPath(), "upload.zip");
+        var zipPath = Path.Combine(Path.GetTempPath(), ZIP_NAME);
         ZipFile.CreateFromDirectory(Path.GetDirectoryName(exportPath), zipPath);
         return zipPath;
     }
 
     private static string GetAccessToken(string username, string password)
     {
-        var loginUrl = string.Format("{0}/v1/core/api/login", UNITY_API_HOST);
-
+        var loginUrl = string.Format("{0}{1}", UNITY_API_HOST, UNITY_API_LOGIN_REL_PATH);
         var loginRequest = new LoginRequest(username, password);
-        var loginJson = JsonUtility.ToJson(loginRequest);
-        Debug.Log(loginUrl);
-        Debug.Log(loginJson);
 
-        using (var request = UnityWebRequest.Post(loginUrl, loginJson))
+        using (var request = CreatePostJsonRequest(loginUrl, loginRequest))
         {
-            Json(request);
-
             var loginResponse = Execute<LoginResponse>(request);
            
             return loginResponse.access_token;
@@ -74,18 +71,14 @@ public class Build {
     private static BuildResponse CreateGameSimulationBuild(string unityProjectId, string accessToken)
     {
         var buildsUrl = string.Format("{0}/v1/builds?projectId={1}", GAME_SIMULATION_API_HOST, unityProjectId);
-
         var buildRequest = new BuildRequest("SampleTestProject", "");
-        var buildJson = JsonUtility.ToJson(buildRequest);
 
-        using (var request = UnityWebRequest.Post(buildsUrl, buildJson))
+        using (var request = CreatePostJsonRequest(buildsUrl, buildRequest))
         {
-            Json(request);
-            Auth(request, accessToken);
+            SetAuthorizationHeader(request, accessToken);
 
             return Execute<BuildResponse>(request);
         }
-
     }
 
     private static void UploadGameSimulationBuild(string zipPath, BuildResponse buildResponse)
@@ -115,24 +108,33 @@ public class Build {
         simulationRequest.decisionEngineMetadata.settings = new Setting[] { setting };
         simulationRequest.maxRuntimeSeconds = "300";
         simulationRequest.runsPerParamCombo = 10;
-        var simulationJson = JsonUtility.ToJson(simulationRequest);
 
-        using (var request = UnityWebRequest.Post(simulationsUrl, simulationJson))
+        using (var request = CreatePostJsonRequest(simulationsUrl, simulationRequest))
         {
-            Json(request);
-            Auth(request, accessToken);
+            SetAuthorizationHeader(request, accessToken);
 
             return Execute<SimulationResponse>(request);
         }
     }
 
-    public static void Json(UnityWebRequest request)
+    public static UnityWebRequest CreatePostJsonRequest(string url, object body)
     {
-        request.SetRequestHeader("Content-Type", "application/json");
-        request.SetRequestHeader("Accept", "application/json");
+        var json = JsonUtility.ToJson(body);
+        var request = UnityWebRequest.Put(url, json);
+        request.method = UnityWebRequest.kHttpVerbPOST;
+        SetJsonHeaders(request);
+        return request;
     }
 
-    public static void Auth(UnityWebRequest request, string accessToken)
+    public static void SetJsonHeaders(UnityWebRequest request)
+    {
+        const string APPLICATION_JSON = "application/json";
+
+        request.SetRequestHeader("Content-Type", APPLICATION_JSON);
+        request.SetRequestHeader("Accept", APPLICATION_JSON);
+    }
+
+    public static void SetAuthorizationHeader(UnityWebRequest request, string accessToken)
     {
         request.SetRequestHeader("Authorization", string.Format("Bearer {0}", accessToken));
     }
@@ -148,7 +150,8 @@ public class Build {
     {
         request.SendWebRequest();
 
-        // HACK
+        // HACK - typically we would yield the SendWebRequest response
+        //  and this method would be executed as a coroutine.
         while (request.downloadProgress < 1.0f)
         {
             System.Threading.Thread.Sleep(100);
