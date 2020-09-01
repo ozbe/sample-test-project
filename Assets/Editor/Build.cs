@@ -10,16 +10,17 @@ public class Build {
     public static void PostExport(string exportPath)
     {
         Debug.Log(string.Format("Export path: {0}", exportPath));
+
+        // TODO - replace UNITY_PROJECT_ID with https://docs.unity3d.com/Manual/UnityCloudBuildManifest.html
         var unityProjectId = Environment.GetEnvironmentVariable("UNITY_PROJECT_ID");
         var username = Environment.GetEnvironmentVariable("UNITY_USERNAME");
         var password = Environment.GetEnvironmentVariable("UNITY_PASSWORD");
 
         // zip
         Debug.Log("Zipping...");
-        var exportDirectory = Path.GetDirectoryName(exportPath);
-        var zipPath = Path.Combine(exportDirectory, "upload.zip");
+        var zipPath = Path.Combine(Path.GetTempPath(), "upload.zip");
         Debug.Log(string.Format("Zip path: {0}", zipPath));
-        ZipFile.CreateFromDirectory(exportDirectory, zipPath);
+        ZipFile.CreateFromDirectory(Path.GetDirectoryName(exportPath), zipPath);
         Debug.Log("Done.");
 
         // get token
