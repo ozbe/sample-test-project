@@ -38,7 +38,7 @@ public class Build {
         // get upload path
         Debug.Log("Creating Game Simulation build...");
         BuildResponse buildResponse;
-        var buildsUrl = string.Format('https://api.prd.gamesimulation.unity3d.com/v1/builds?projectId={0}', unityProjectId);
+        var buildsUrl = string.Format("https://api.prd.gamesimulation.unity3d.com/v1/builds?projectId={0}", unityProjectId);
         var buildRequest = new BuildRequest("Foo", "Bar");
         var buildJson = JsonUtility.ToJson(buildRequest);
         using (var request = UnityWebRequest.Post(buildsUrl, buildJson))
