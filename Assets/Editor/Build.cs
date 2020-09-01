@@ -58,6 +58,8 @@ public class Build {
 
         var loginRequest = new LoginRequest(username, password);
         var loginJson = JsonUtility.ToJson(loginRequest);
+        Debug.Log(loginUrl);
+        Debug.Log(loginJson);
 
         using (var request = UnityWebRequest.Post(loginUrl, loginJson))
         {
